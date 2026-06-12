@@ -1,0 +1,58 @@
+:root {
+  --text-main: #111827;
+  --text-muted: rgba(17, 24, 39, 0.7);
+  --bg-active: rgba(0, 0, 0, 0.05);
+  --page-bg: #ffffff;
+}
+
+/* Ẩn thanh cuộn lớn của toàn bộ trang (mô phỏng app mobile) */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+  display: none;
+}
+
+html, body {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Ẩn scrollbar thô cho dropdown */
+.custom-scrollbar {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  display: block;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Flat design for ZMP UI Header */
+.zaui-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+.zaui-header::after {
+  display: none !important;
+}
+
+
+
+
+
+
+
+

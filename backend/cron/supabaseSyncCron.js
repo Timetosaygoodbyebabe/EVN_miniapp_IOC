@@ -16,18 +16,34 @@ const syncSupabaseToMySQL = async () => {
   try {
     console.log("[Cron] Starting sync from Supabase to MySQL...");
 
-    // 1. Fetch data from Supabase (up to 10000 rows to ensure we get everything)
-    const url = `${supabaseUrl}/rest/v1/${TABLE_NAME}?select=*&limit=10000`;
-    const response = await axios.get(url, {
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': `Bearer ${supabaseKey}`
+    // 1. Fetch data from Supabase (Pagination to bypass 1000 row limit)
+    let data = [];
+    let offset = 0;
+    const limit = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const url = `${supabaseUrl}/rest/v1/${TABLE_NAME}?select=*&limit=${limit}&offset=${offset}`;
+      const response = await axios.get(url, {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`
+        }
+      });
+
+      const chunk = response.data;
+      if (Array.isArray(chunk) && chunk.length > 0) {
+        data = data.concat(chunk);
+        offset += limit;
       }
-    });
+      
+      // Stop loop if we received less than the limit, meaning it's the last page
+      if (!Array.isArray(chunk) || chunk.length < limit) {
+        hasMore = false;
+      }
+    }
 
-    const data = response.data;
-
-    if (!Array.isArray(data) || data.length === 0) {
+    if (data.length === 0) {
       console.log("[Cron] No data found in Supabase or data is empty. Skipping MySQL update.");
       return;
     }
@@ -48,14 +64,22 @@ const syncSupabaseToMySQL = async () => {
     try {
       await connection.beginTransaction();
 
+      const columns = Object.keys(data[0]);
+
+      // Tự động tạo Bảng nếu chưa tồn tại
+      const createColumns = columns.map(col => `\`${col}\` TEXT`).join(', ');
+      const createTableQuery = `CREATE TABLE IF NOT EXISTS \`${TABLE_NAME}\` (${createColumns})`;
+      
+      console.log(`[Cron] Checking/Creating table ${TABLE_NAME}...`);
+      await connection.query(createTableQuery);
+
       console.log(`[Cron] Truncating table ${TABLE_NAME}...`);
-      await connection.query(`TRUNCATE TABLE ${TABLE_NAME}`);
+      await connection.query(`TRUNCATE TABLE \`${TABLE_NAME}\``);
 
       console.log(`[Cron] Inserting ${data.length} rows into ${TABLE_NAME}...`);
       
-      const columns = Object.keys(data[0]);
       const placeholders = columns.map(() => '?').join(', ');
-      const query = `INSERT INTO ${TABLE_NAME} (${columns.join(', ')}) VALUES (${placeholders})`;
+      const query = `INSERT INTO \`${TABLE_NAME}\` (${columns.map(c => `\`${c}\``).join(', ')}) VALUES (${placeholders})`;
 
       for (const row of data) {
         const values = columns.map(col => row[col]);

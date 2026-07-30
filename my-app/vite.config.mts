@@ -7,6 +7,16 @@ export default () => {
   return defineConfig({
     root: "./src",
     base: "",
+    server: {
+      proxy: {
+        '/api/evn': {
+          target: 'https://cskh-api.cpc.vn',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/api\/evn/, '/api')
+        }
+      }
+    },
     plugins: [zaloMiniApp(), react()],
     build: {
       assetsInlineLimit: 0,

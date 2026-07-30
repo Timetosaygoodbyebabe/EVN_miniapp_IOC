@@ -49,7 +49,8 @@ const DetailPage = () => {
       const match = data.tuNgay.match(/(\d{2})\/(\d{2})\/(\d{4})/);
       if (match) {
         const datePart = match[0]; // "21/04/2026"
-        apiService.getForecast(datePart, data.phuongXa).then(res => {
+        const locationQuery = data.dienLuc ? data.dienLuc.replace('Điện lực ', '') : '';
+        apiService.getForecast(datePart, locationQuery).then(res => {
           if (res.data && !res.error) {
             setForecast(res.data);
             setForecastError(false);
@@ -101,10 +102,6 @@ const DetailPage = () => {
               <div className="flex justify-between items-start border-b border-gray-50 pb-3">
                 <span className="text-gray-500 text-[18px] w-24 flex-shrink-0">Điện lực</span>
                 <span className="font-bold text-gray-900 text-right">{data.dienLuc || "---"}</span>
-              </div>
-              <div className="flex justify-between items-start border-b border-gray-50 pb-3">
-                <span className="text-gray-500 text-[18px] w-24 flex-shrink-0">Phường/Xã</span>
-                <span className="font-bold text-gray-900 text-right">{data.phuongXa || "---"}</span>
               </div>
               <div className="flex justify-between items-start border-b border-gray-50 pb-3">
                 <span className="text-gray-500 text-[18px] w-24 flex-shrink-0">Tên trạm</span>

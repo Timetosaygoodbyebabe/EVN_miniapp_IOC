@@ -19,8 +19,8 @@ app.use('/api', apiRoutes);
 // Khởi chạy Weather Cronjob
 const weatherCron = require('./cron/weatherCron');
 
-// Khởi chạy Supabase Sync Cronjob
-const supabaseSyncCron = require('./cron/supabaseSyncCron');
+// Khởi chạy EVN Sync Cronjob
+const evnSyncCron = require('./cron/evnSyncCron');
 
 // Endpoint Thời tiết hôm nay (Từ Cache)
 app.get('/api/weather/today', (req, res) => {

@@ -119,13 +119,12 @@ const CustomDatePicker = ({ label, value = [], onChange, disabled }: any) => {
     const dd = String(d.getDate()).padStart(2, '0');
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    let newValues = [...value];
-    if (newValues.includes(dateStr)) {
-      newValues = newValues.filter((v: string) => v !== dateStr);
+    if (value && value.includes(dateStr)) {
+      onChange([]);
     } else {
-      newValues.push(dateStr);
+      onChange([dateStr]);
+      setIsOpen(false);
     }
-    onChange(newValues);
   };
 
   const getDisplayText = () => {
@@ -237,34 +236,40 @@ function HomePage() {
     if (!selected) return;
     setIsLoading(true);
     const { data, error } = await apiService.getPhuongXa(selected);
-    
+
     if (data && !error) {
       setPhuongXaList(data as string[]);
     }
     setIsLoading(false);
   };
 
-  const handlePhuongXaChange = async (val: string) => {
-    setPhuongXa(val);
+  const handlePhuongXaChange = async (selected: string) => {
+    setPhuongXa(selected);
     setTram([]);
     setTramList([]);
 
-    if (!val) return;
+    if (!selected) return;
     setIsLoading(true);
-    const { data, error } = await apiService.getTram(dienLuc, val);
-    
+    const { data, error } = await apiService.getTram(dienLuc, selected);
+
     if (data && !error) {
       setTramList(data as string[]);
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   const handleSearch = () => {
-    if (!dienLuc || !phuongXa || !tram || tram.length === 0) {
+    if (!dienLuc) {
       return;
     }
-    const isAllTrams = tram.length === tramList.length;
-    navigate("/search", { state: { dienLuc, phuongXa, tram: isAllTrams ? [] : tram, date } });
+
+    let selectedTrams = tram;
+    if (tram.length === 0) {
+      selectedTrams = tramList;
+    }
+
+    const isAllTrams = selectedTrams.length === tramList.length;
+    navigate("/search", { state: { dienLuc, phuongXa, tram: isAllTrams ? [] : selectedTrams, date } });
   };
 
   return (
@@ -274,67 +279,67 @@ function HomePage() {
       <div className="relative z-10 w-full h-full overflow-y-auto custom-scrollbar transform-gpu">
         <div className="w-full flex flex-col p-6 pb-10 text-[var(--text-main)] drop-shadow-md">
 
-        <div className="flex flex-col gap-1 mt-9 mb-6">
-          <h1 className="text-[28px] font-bold tracking-tight">Tra cứu</h1>
-        </div>
+          <div className="flex flex-col gap-1 mt-9 mb-6">
+            <h1 className="text-[28px] font-bold tracking-tight">Tra cứu</h1>
+          </div>
 
-        <div className="flex flex-col z-10 relative">
-          <div className="flex flex-col gap-4">
-            <CustomSelect
-              label="Điện lực"
-              value={dienLuc}
-              options={dienLucList}
-              onChange={handleDienLucChange}
-              onClear={() => handleDienLucChange("")}
-              disabled={isLoading && dienLucList.length === 0}
-              loading={isLoading && !dienLuc}
-              placeholder="Chọn điện lực..."
-            />
+          <div className="flex flex-col z-10 relative">
+            <div className="flex flex-col gap-4">
+              <CustomSelect
+                label="Điện lực"
+                value={dienLuc}
+                options={dienLucList}
+                onChange={handleDienLucChange}
+                onClear={() => handleDienLucChange("")}
+                disabled={isLoading && dienLucList.length === 0}
+                loading={isLoading && !dienLuc}
+                placeholder="Chọn điện lực..."
+              />
 
-            <CustomSelect
-              label="Phường xã"
-              value={phuongXa}
-              options={phuongXaList}
-              onChange={handlePhuongXaChange}
-              onClear={() => handlePhuongXaChange("")}
-              disabled={!dienLuc || isLoading}
-              loading={isLoading && dienLuc && !phuongXa}
-              placeholder="Chọn phường xã..."
-            />
+              <CustomSelect
+                label="Phường / Xã"
+                value={phuongXa}
+                options={phuongXaList}
+                onChange={handlePhuongXaChange}
+                onClear={() => handlePhuongXaChange("")}
+                disabled={!dienLuc || isLoading || phuongXaList.length === 0}
+                loading={isLoading && dienLuc && phuongXaList.length === 0}
+                placeholder="Chọn phường xã..."
+              />
 
-            <CustomSelect
-              label="Tên trạm"
-              value={tram}
-              options={tramList}
-              onChange={(val: string[]) => setTram(val)}
-              onClear={() => setTram([])}
-              disabled={!phuongXa || isLoading}
-              loading={isLoading && phuongXa && tramList.length === 0}
-              placeholder="Chọn tên trạm..."
-              multiSelect={true}
-              showSelectAll={true}
-            />
+              <CustomSelect
+                label="Tên trạm"
+                value={tram}
+                options={tramList}
+                onChange={(val: string[]) => setTram(val)}
+                onClear={() => setTram([])}
+                disabled={!dienLuc || isLoading}
+                loading={isLoading && dienLuc && tramList.length === 0}
+                placeholder="Chọn tên trạm..."
+                multiSelect={true}
+                showSelectAll={true}
+              />
 
-            <CustomDatePicker
-              label="Ngày tháng năm"
-              value={date}
-              onChange={(val: string[]) => setDate(val)}
-              disabled={false}
-            />
+              <CustomDatePicker
+                label="Ngày tháng năm"
+                value={date}
+                onChange={(val: string[]) => setDate(val)}
+                disabled={false}
+              />
 
-            <div className="w-full flex justify-center mt-6">
-              <button
-                onClick={handleSearch}
-                className={`w-full max-w-[240px] rounded-full py-4 px-8 text-[18px] font-bold transition-all duration-300 ease-out flex justify-center items-center gap-2 relative overflow-hidden bg-blue-600 text-white shadow-md ${(!dienLuc || !phuongXa || !tram || tram.length === 0) ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0'}`}
-              >
-                <Icon icon="zi-search" style={{ fontSize: '16px' }} />
-                Tra cứu
-              </button>
+              <div className="w-full flex justify-center mt-6">
+                <button
+                  onClick={handleSearch}
+                  className={`w-full max-w-[240px] rounded-full py-4 px-8 text-[18px] font-bold transition-all duration-300 ease-out flex justify-center items-center gap-2 relative overflow-hidden bg-blue-600 text-white shadow-md ${!dienLuc ? 'cursor-not-allowed opacity-50' : 'hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.97] active:translate-y-0'}`}
+                >
+                  <Icon icon="zi-search" style={{ fontSize: '16px' }} />
+                  Tra cứu
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-      </div>
+        </div>
       </div>
     </Page>
   );
